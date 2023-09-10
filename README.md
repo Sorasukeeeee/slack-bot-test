@@ -1,2 +1,2 @@
 # slack-bot-test
-GitHubのWebHook設定などをテストするためのリポジトリです。
+GitHubのWebHook設定などをテストするためのリポジトリです
