@@ -1,0 +1,40 @@
+name: Slack Notify Sample
+
+on: [push]
+
+jobs:
+  notify:
+    name: Slack Notify Sample
+    runs-on: ubuntu-latest
+    steps:
+      - name: Slack Notify Sample
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          channel-id: '{チャンネルID}'
+          payload: |
+            {
+              "attachments": [
+                {
+                  "blocks": [
+                    {
+                      "type": "header",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "Request for Approve",
+                        "emoji": true
+                      }
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "Slack通知サンプルです。",
+                        "emoji": true
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{secrets.SLACK_API_TOKEN}}
