@@ -34,7 +34,10 @@ jobs:
       env:
         SLACK_TITLE: Message
         SLACK_COLOR: good
-        SLACK_MESSAGE: レビュー依頼が届きました！
-
+        SLACK_LINK_NAMES: true # メッセージ内でのメンションを有効にする
+        SLACK_MESSAGE: |
+          レビュー依頼が届きました！
+          <${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>
+        MSG_MINIMAL: true # メッセージだけを通知文にする
     # 失敗
     #-- 何もしない --#
