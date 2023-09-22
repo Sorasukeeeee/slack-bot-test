@@ -5,8 +5,6 @@ on:
     types: [created, edited]
 
 env:
-  SLACK_USERNAME: DeployBot
-  SLACK_ICON: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
   SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
 
 jobs:
@@ -37,7 +35,9 @@ jobs:
         SLACK_LINK_NAMES: true # メッセージ内でのメンションを有効にする
         SLACK_MESSAGE: |
           レビュー依頼が届きました！
-          <${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>
+          {{ github.event.issue_comment.issue_url }}
         MSG_MINIMAL: true # メッセージだけを通知文にする
+        SLACK_USERNAME: レビュー依頼Bot
+        SLACK_ICON: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
     # 失敗
     #-- 何もしない --#
