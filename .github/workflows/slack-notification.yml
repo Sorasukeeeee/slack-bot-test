@@ -26,9 +26,10 @@ jobs:
     - name: Get URL
       id: get_url
       run: |
-        echo "::set-output name=html_url::${{ github.event.comment.html_url }}"
-        echo "::set-output name=url_without_anchor::${{ github.event.comment.html_url | split('#')[0] }}"
-
+        html_url="${{ github.event.comment.html_url }}"
+        url_without_anchor="$(echo $html_url | cut -d'#' -f1)"
+        echo "::set-output name=html_url::$html_url"
+        echo "::set-output name=url_without_anchor::$url_without_anchor"
 
     #-- Slack通知 --#
     # 成功
