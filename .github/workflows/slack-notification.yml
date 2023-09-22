@@ -22,6 +22,12 @@ jobs:
       with:
         ref: ${{ steps.get_branch.outputs.branch }}
 
+    #-- Pull RequestのURL取得 --#
+    - name: Get URL
+    run: |
+      html_url=${{ github.event.comment.html_url }}
+      url_without_anchor="${html_url%%#*}"
+
     #-- Slack通知 --#
     # 成功
     - name: Slack Notification on Success
@@ -33,7 +39,7 @@ jobs:
         SLACK_MESSAGE: |
           @メンショングループを指定する
           レビュー依頼が届きました！
-          ${{ github.event.comment.issue_url }}
+          ${{ url_without_anchor }}
         MSG_MINIMAL: true # メッセージだけを通知文にする
         SLACK_USERNAME: レビュー依頼Bot
         SLACK_ICON: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
