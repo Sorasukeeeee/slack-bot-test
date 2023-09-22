@@ -18,11 +18,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: "Get branch name and sha"
-      id: get_branch
-      run: |
-        PR=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" ${{ github.event.issue.pull_request.url }})
-        
     #-- Gitリポジトリの内容を取得 --#
     - name: Checkout
       uses: actions/checkout@v3
