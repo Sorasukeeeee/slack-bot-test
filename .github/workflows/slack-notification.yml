@@ -24,9 +24,9 @@ jobs:
 
     #-- Pull RequestのURL取得 --#
     - name: Get URL
-    run: |
-      html_url=${{ github.event.comment.html_url }}
-      url_without_anchor="${html_url%%#*}"
+      run: |
+        html_url=${{ github.event.comment.html_url }}
+        url_without_anchor="${html_url%%#*}"
 
     #-- Slack通知 --#
     # 成功
