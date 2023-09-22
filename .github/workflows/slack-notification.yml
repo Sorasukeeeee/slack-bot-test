@@ -29,12 +29,11 @@ jobs:
       if: ${{ success() }}
       env:
         SLACK_TITLE: Message
-        SLACK_COLOR: good
         SLACK_LINK_NAMES: true # メッセージ内でのメンションを有効にする
         SLACK_MESSAGE: |
-          @${{ secrets.SLACK_USER_NAME }}
+          @メンショングループを指定する
           レビュー依頼が届きました！
-          {{ github.event.issue_comment.issue_url }}
+          ${{ github.event.issue_comment.issue_url }}
         MSG_MINIMAL: true # メッセージだけを通知文にする
         SLACK_USERNAME: レビュー依頼Bot
         SLACK_ICON: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
