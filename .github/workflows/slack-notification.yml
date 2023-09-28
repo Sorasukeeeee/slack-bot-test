@@ -53,10 +53,6 @@ jobs:
         echo "Slackにコメントを投稿しました。 (${{ github.event.comment.body }})"
       
     # 失敗
-  addCommentIfSkipped:
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
     - name: Check if Workflow was Skipped
       id: check_workflow
       run: |
