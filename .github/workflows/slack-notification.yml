@@ -48,11 +48,20 @@ jobs:
         SLACK_USERNAME: レビュー依頼Bot
         SLACK_ICON: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
     # 失敗
-    - name: Add Comment on Failure
-      if: failure()
+  addCommentIfSkipped:
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+    - name: Check if Workflow was Skipped
+      id: check_workflow
+      run: |
+        SKIPPED=$(jq -r .workflow_run.conclusion <<< "${{ github.event.workflow_run }}")
+        echo "::set-output name=SKIPPED::$SKIPPED"
+    - name: Add Comment if Skipped
+      if: ${{ steps.check_workflow.outputs.SKIPPED == "skipped" }}
       run: |
         GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
-        COMMENT_BODY="失敗しました"
+        COMMENT_BODY="ジョブはスキップされました"
         echo "::set-env name=COMMENT_BODY::$COMMENT_BODY"
         echo "Creating comment..."
         curl -X POST -H "Authorization: token $GITHUB_TOKEN" \
