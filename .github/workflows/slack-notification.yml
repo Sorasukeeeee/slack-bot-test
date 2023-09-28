@@ -62,7 +62,17 @@ jobs:
       run: |
         SKIPPED=$(jq -r .workflow_run.conclusion <<< "${{ github.event.workflow_run }}")
         echo "SKIPPED=${SKIPPED}" >> $GITHUB_ENV
-    - name: Add Comment if Skipped
-      if: ${{ always() }} && ${{ env.SKIPPED == 'skipped' }}
-      run: |
-        echo "レビュー依頼の投稿がスキップされました。 (${{ github.event.comment.body }})"
+    - name: Post Comment
+      uses: actions/github-script@v3
+      env:
+        MESSAGE: |
+          レビュー依頼がスキップされました。
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        script: |
+          github.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: process.env.MESSAGE
+          })
