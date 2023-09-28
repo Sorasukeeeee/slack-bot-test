@@ -52,14 +52,18 @@ jobs:
       run: |
         echo "Slackにコメントを投稿しました。 (${{ github.event.comment.body }})"
       
-    # 失敗
+# ワークフローが完了した後、スキップされたかどうかを確認し、コメントを追加するジョブ
+  addCommentIfSkipped:
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    steps:
     - name: Check if Workflow was Skipped
       id: check_workflow
       run: |
         SKIPPED=$(jq -r .workflow_run.conclusion <<< "${{ github.event.workflow_run }}")
         echo "::set-output name=SKIPPED::$SKIPPED"
     - name: Add Comment if Skipped
-      if: ${{ steps.check_workflow.outputs.SKIPPED == 'skipped' }}
+      if: always() && ${{ steps.check_workflow.outputs.SKIPPED == 'skipped' }}
       run: |
         GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
         COMMENT_BODY="ジョブはスキップされました"
@@ -69,3 +73,4 @@ jobs:
           -H "Accept: application/vnd.github.v3+json" \
           "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments" \
           -d "{\"body\": \"$COMMENT_BODY\"}"
+          
