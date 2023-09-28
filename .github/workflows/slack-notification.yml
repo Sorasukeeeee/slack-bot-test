@@ -58,7 +58,7 @@ jobs:
         SKIPPED=$(jq -r .workflow_run.conclusion <<< "${{ github.event.workflow_run }}")
         echo "::set-output name=SKIPPED::$SKIPPED"
     - name: Add Comment if Skipped
-      if: ${{ steps.check_workflow.outputs.SKIPPED == "skipped" }}
+      if: ${{ steps.check_workflow.outputs.SKIPPED == 'skipped' }}
       run: |
         GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
         COMMENT_BODY="ジョブはスキップされました"
