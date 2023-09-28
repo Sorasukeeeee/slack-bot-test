@@ -29,9 +29,9 @@ jobs:
       run: |
         html_url="${{ github.event.comment.html_url }}"
         url_without_anchor="$(echo $html_url | cut -d'#' -f1)"
-        echo "::set-output name=html_url::$html_url"
-        echo "::set-output name=url_without_anchor::$url_without_anchor"
-
+        echo "html_url=${html_url}" >> $GITHUB_ENV
+        echo "url_without_anchor=${url_without_anchor}" >> $GITHUB_ENV
+    
     #-- Slack通知 --#
     # 成功
     - name: Slack Notification on Success
@@ -43,11 +43,16 @@ jobs:
         SLACK_MESSAGE: |
           @メンショングループを指定する
           レビュー依頼が届きました！
-          ${{ steps.get_url.outputs.url_without_anchor }}
+          ${{ env.url_without_anchor }}
         MSG_MINIMAL: true # メッセージだけを通知文にする
         SLACK_USERNAME: レビュー依頼Bot
         SLACK_ICON: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
-    # 失敗
+    
+    - name: Comments
+      run: |
+        echo "Slackにコメントを投稿しました。 (${{ github.event.comment.body }})"
+      
+# ワークフローが完了した後、スキップされたかどうかを確認し、コメントを追加するジョブ
   addCommentIfSkipped:
     runs-on: ubuntu-latest
     if: always()
@@ -56,15 +61,8 @@ jobs:
       id: check_workflow
       run: |
         SKIPPED=$(jq -r .workflow_run.conclusion <<< "${{ github.event.workflow_run }}")
-        echo "::set-output name=SKIPPED::$SKIPPED"
+        echo "SKIPPED=${SKIPPED}" >> $GITHUB_ENV
     - name: Add Comment if Skipped
-      if: ${{ steps.check_workflow.outputs.SKIPPED == 'skipped' }}
+      if: ${{ always() }} && ${{ env.SKIPPED == 'skipped' }}
       run: |
-        GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
-        COMMENT_BODY="ジョブはスキップされました"
-        echo "::set-env name=COMMENT_BODY::$COMMENT_BODY"
-        echo "Creating comment..."
-        curl -X POST -H "Authorization: token $GITHUB_TOKEN" \
-          -H "Accept: application/vnd.github.v3+json" \
-          "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments" \
-          -d "{\"body\": \"$COMMENT_BODY\"}"
+        echo "レビュー依頼の投稿がスキップされました。 (${{ github.event.comment.body }})"
