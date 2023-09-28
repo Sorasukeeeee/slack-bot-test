@@ -11,7 +11,8 @@ jobs:
   slackNotification:
     if: github.event_name == 'issue_comment' &&
         contains(github.event.comment.html_url, '/pull/') && 
-        startsWith(github.event.comment.body, '/review')
+        startsWith(github.event.comment.body, '/review') &&
+        github.event.pull_request.mergeable == true
     name: Slack-Notification
     runs-on: ubuntu-latest
 
@@ -47,4 +48,14 @@ jobs:
         SLACK_USERNAME: レビュー依頼Bot
         SLACK_ICON: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
     # 失敗
-    #-- 何もしない --#
+    - name: Add Comment on Failure
+      if: failure()
+      run: |
+        GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+        COMMENT_BODY="失敗しました"
+        echo "::set-env name=COMMENT_BODY::$COMMENT_BODY"
+        echo "Creating comment..."
+        curl -X POST -H "Authorization: token $GITHUB_TOKEN" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments" \
+          -d "{\"body\": \"$COMMENT_BODY\"}"
