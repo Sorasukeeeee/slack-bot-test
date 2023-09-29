@@ -12,7 +12,6 @@ jobs:
     if: github.event_name == 'issue_comment' &&
         contains(github.event.comment.html_url, '/pull/') && 
         startsWith(github.event.comment.body, '/review') &&
-        github.event.pull_request.mergeable == true
     name: Slack-Notification
     runs-on: ubuntu-latest
 
@@ -20,11 +19,13 @@ jobs:
     #-- Gitリポジトリの内容を取得 --#
     - name: Checkout
       uses: actions/checkout@v3
+      if: github.event.pull_request.mergeable == true
       with:
         ref: ${{ steps.get_branch.outputs.branch }}
 
     #-- Pull RequestのURL取得 --#
     - name: Get URL
+      if: github.event.pull_request.mergeable == true
       id: get_url
       run: |
         html_url="${{ github.event.comment.html_url }}"
@@ -41,7 +42,7 @@ jobs:
         SLACK_TITLE: Message
         SLACK_LINK_NAMES: true # メッセージ内でのメンションを有効にする
         SLACK_MESSAGE: |
-          @メンショングループを指定する
+          <${{secrets.SLACK_USER_ID}}>
           レビュー依頼が届きました！
           ${{ env.url_without_anchor }}
         MSG_MINIMAL: true # メッセージだけを通知文にする
