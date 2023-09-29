@@ -42,7 +42,7 @@ jobs:
         SLACK_TITLE: Message
         SLACK_LINK_NAMES: true # メッセージ内でのメンションを有効にする
         SLACK_MESSAGE: |
-          <${{secrets.SLACK_USER_ID}}>
+          <@${{secrets.SLACK_USER_ID}}>
           レビュー依頼が届きました！
           ${{ env.url_without_anchor }}
         MSG_MINIMAL: true # メッセージだけを通知文にする
