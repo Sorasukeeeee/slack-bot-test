@@ -11,7 +11,7 @@ jobs:
   slackNotification:
     if: github.event_name == 'issue_comment' &&
         contains(github.event.comment.html_url, '/pull/') && 
-        startsWith(github.event.comment.body, '/review') &&
+        startsWith(github.event.comment.body, '/review')
     name: Slack-Notification
     runs-on: ubuntu-latest
 
