@@ -28,7 +28,7 @@ jobs:
                     "block_id": "sectionBlockOnlyMrkdwn",
                     "text": {
                       "type": "mrkdwn",
-                      "text": "<@${{secrets.SLACK_USER_ID}}>\n レビュー依頼が届きました！ご確認をお願いします！:bow:"
+                      "text": "<@${{secrets.SLACK_USER_ID}}>\n PRのレビュー依頼が届きました！ご確認をお願いします！:bow:"
                     }
                   },
                   {
@@ -36,7 +36,7 @@ jobs:
                     "elements": [
                       {
                         "type": "image",
-                        "image_url": "${{ github.user.avatar_url }}",
+                        "image_url": "https://avatars.githubusercontent.com/${{ github.actor }}",
                         "alt_text": "github_icon"
                       },
                       {
