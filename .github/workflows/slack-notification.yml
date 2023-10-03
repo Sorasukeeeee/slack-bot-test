@@ -96,7 +96,7 @@ jobs:
               }
             ]
           }' \
-        env.SLACK_WEBHOOK
+        ${{ secrets.SLACK_WEBHOOK }}
 
       
 # ワークフローが完了した後、スキップされたかどうかを確認し、コメントを追加するジョブ
