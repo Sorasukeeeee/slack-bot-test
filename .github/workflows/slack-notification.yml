@@ -28,7 +28,7 @@ jobs:
                     "block_id": "sectionBlockOnlyMrkdwn",
                     "text": {
                       "type": "mrkdwn",
-                      "text": "<@${{secrets.SLACK_USER_ID}}>\n レビュー依頼が届きました！ご確認をお願いします:bow:"
+                      "text": "<@${{secrets.SLACK_USER_ID}}>\n レビュー依頼が届きました！ご確認をお願いします！:bow:"
                     }
                   },
                   {
