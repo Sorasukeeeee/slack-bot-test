@@ -6,6 +6,7 @@ on:
 
 env:
   SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+  START_review2_COMMENT: '/review2'
 
 jobs:
   slackNotification:
@@ -52,6 +53,51 @@ jobs:
     - name: Comments
       run: |
         echo "Slackにコメントを投稿しました。 (${{ github.event.comment.body }})"
+        
+  notification:
+    name: 'Notification'
+    runs-on: ubuntu-latest
+    steps:
+      # 「terraform apply」とユーザーがコメントした場合
+    - name: 'Start applying'
+      if: github.event.issue.state == 'open' && github.event.issue.pull_request != null && github.event.comment.body == env.START_review2_COMMENT
+      run: |
+        curl -X POST \
+          --data-urlencode 'payload={
+            "attachments": [
+              {
+                "color": "#C0C0C0",
+                "blocks": [
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": ":computer:レビュー依頼が届きました"
+                    }
+                  },
+                  {
+                    "type": "section",
+                    "fields": [
+                      {
+                        "type": "mrkdwn",
+                        "text": "*URL:*\n https://github.com/${{ github.repository }}/pull/${{ github.event.issue.number }}"
+                      },
+                      {
+                        "type": "mrkdwn",
+                        "text": "*タイトル:*\n ${{ github.event.issue.title }}"
+                      },
+                      {
+                        "type": "mrkdwn",
+                        "text": "*実行ユーザ:*\n ${{ github.actor }}"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }' \
+        env.SLACK_WEBHOOK
+
       
 # ワークフローが完了した後、スキップされたかどうかを確認し、コメントを追加するジョブ
   addCommentIfSkipped:
