@@ -2,100 +2,69 @@ name: Slack Notification
 
 on: 
   issue_comment:
-    types: [created, edited]
+    types: [created]
 
 env:
   SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-  START_review2_COMMENT: '/review2'
+  START_review_COMMENT: '/review'
 
 jobs:
-  #slackNotification:
-    #if: github.event_name == 'issue_comment' &&
-    #    contains(github.event.comment.html_url, '/pull/') && 
-    #    startsWith(github.event.comment.body, '/review')
-    #name: Slack-Notification
-    #runs-on: ubuntu-latest
-
-    #steps:
-    #-- Gitリポジトリの内容を取得 --#
-    #- name: Checkout
-    #  uses: actions/checkout@v3
-    #  if: github.event.pull_request.mergeable == true
-    #  with:
-    #    ref: ${{ steps.get_branch.outputs.branch }}
-
-    #-- Pull RequestのURL取得 --#
-    #- name: Get URL
-    #  if: github.event.pull_request.mergeable == true
-    #  id: get_url
-    #  run: |
-    #    html_url="${{ github.event.comment.html_url }}"
-    #    url_without_anchor="$(echo $html_url | cut -d'#' -f1)"
-    #    echo "html_url=${html_url}" >> $GITHUB_ENV
-    #    echo "url_without_anchor=${url_without_anchor}" >> $GITHUB_ENV
-    
-    #-- Slack通知 --#
-    # 成功
-    #- name: Slack Notification on Success
-    #  uses: rtCamp/action-slack-notify@v2
-    #  if: ${{ success() }}
-    #  env:
-    #    SLACK_TITLE: Message
-    #    SLACK_LINK_NAMES: true # メッセージ内でのメンションを有効にする
-    #    SLACK_MESSAGE: |
-    #      <@${{secrets.SLACK_USER_ID}}>
-    #      レビュー依頼が届きました！
-    #      ${{ env.url_without_anchor }}
-    #    MSG_MINIMAL: true # メッセージだけを通知文にする
-    #    SLACK_USERNAME: レビュー依頼Bot
-    #    SLACK_ICON: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
-    
-    #- name: Comments
-    #  run: |
-    #    echo "Slackにコメントを投稿しました。 (${{ github.event.comment.body }})"
-        
   notification:
     name: 'Notification'
     runs-on: ubuntu-latest
     steps:
-      # 「terraform apply」とユーザーがコメントした場合
-    - name: 'Start applying'
-      if: github.event.issue.state == 'open' && github.event.issue.pull_request != null && github.event.comment.body == env.START_review2_COMMENT
+      # 「/review」とユーザーがコメントした場合
+    - name: 'Start review'
+      if: github.event.issue.state == 'open' && github.event.issue.pull_request != null && github.event.comment.body == env.START_review_COMMENT
       run: |
         curl -X POST \
           --data-urlencode 'payload={
             "attachments": [
               {
-                "color": "#C0C0C0",
+                "color": "#good",
                 "blocks": [
                   {
                     "type": "section",
+                    "block_id": "sectionBlockOnlyMrkdwn",
                     "text": {
                       "type": "mrkdwn",
-                      "text": ":computer:レビュー依頼が届きました"
+                      "text": "<@${{secrets.SLACK_USER_ID}}>\n レビュー依頼が届きました！ご確認をお願いします:bow:"
+                    }
+                  },
+                  {
+                    "type": "context",
+                    "elements": [
+                      {
+                        "type": "image",
+                        "image_url": "{{ github.user.avatar_url }}",
+                        "alt_text": "github_icon"
+                      },
+                      {
+                        "type": "mrkdwn",
+                        "text": "{{ github.actor }}"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "section",
+                    "block_id": "sectionBlockOnlyMrkdwna",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": "*タイトル*\n ${{ github.event.issue.title }}"
                     }
                   },
                   {
                     "type": "section",
-                    "fields": [
-                      {
-                        "type": "mrkdwn",
-                        "text": "*URL:*\n https://github.com/${{ github.repository }}/pull/${{ github.event.issue.number }}"
-                      },
-                      {
-                        "type": "mrkdwn",
-                        "text": "*タイトル:*\n ${{ github.event.issue.title }}"
-                      },
-                      {
-                        "type": "mrkdwn",
-                        "text": "*実行ユーザ:*\n ${{ github.actor }}"
-                      }
-                    ]
+                    "block_id": "sectionBlockOnlyMrkdwnb",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": "*URL*\n https://github.com/${{ github.repository }}/pull/${{ github.event.issue.number }}"
+                    }
                   }
                 ]
               }
             ]
-          }' \
+          } \
         ${{ secrets.SLACK_WEBHOOK }}
 
       
