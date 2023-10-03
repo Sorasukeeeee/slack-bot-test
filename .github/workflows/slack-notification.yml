@@ -21,7 +21,7 @@ jobs:
           --data-urlencode 'payload={
             "attachments": [
               {
-                "color": "#good",
+                "color": "#FFC0CB",
                 "blocks": [
                   {
                     "type": "section",
@@ -65,11 +65,11 @@ jobs:
               }
             ]
           }' \
-        ${{ secrets.SLACK_WEBHOOK_URL }}
+        ${{ secrets.SLACK_WEBHOOK }}
       
   addCommentIfSkipped:
     runs-on: ubuntu-latest
-    if: always()  # この条件を変更しないでください
+    if: always()
     steps:
     - name: Check if Workflow was Skipped or Failed
       id: check_workflow
@@ -77,7 +77,7 @@ jobs:
         CONCLUSION=$(jq -r '.conclusion' <<< "${{ github.event.workflow_run }}")
         SKIPPED=$(jq -r '.conclusion == "skipped" || .conclusion == "failure"' <<< "${{ github.event.workflow_run }}")
         echo "SKIPPED=${SKIPPED}" >> $GITHUB_ENV
-      continue-on-error: true  # ジョブが失敗しても次のステップを続行します
+      continue-on-error: true
 
     - name: Post Comment
       if: env.SKIPPED == 'true'
