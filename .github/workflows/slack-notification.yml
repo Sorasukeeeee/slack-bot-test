@@ -36,12 +36,12 @@ jobs:
                     "elements": [
                       {
                         "type": "image",
-                        "image_url": "{{ github.user.avatar_url }}",
+                        "image_url": "${{ github.user.avatar_url }}",
                         "alt_text": "github_icon"
                       },
                       {
                         "type": "mrkdwn",
-                        "text": "{{ github.actor }}"
+                        "text": "${{ github.actor }}"
                       }
                     ]
                   },
