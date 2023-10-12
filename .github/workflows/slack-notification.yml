@@ -19,18 +19,12 @@ jobs:
       run: |
         curl -X POST \
           --data-urlencode 'payload={
+            "text": "<@${{secrets.SLACK_USER_ID}}>\n PRのレビュー依頼が届きました！ご確認をお願いします！:bow:",
+            "blocks": [],
             "attachments": [
               {
                 "color": "#FFC0CB",
                 "blocks": [
-                  {
-                    "type": "section",
-                    "block_id": "sectionBlockOnlyMrkdwn",
-                    "text": {
-                      "type": "mrkdwn",
-                      "text": "<@${{secrets.SLACK_USER_ID}}>\n PRのレビュー依頼が届きました！ご確認をお願いします！:bow:"
-                    }
-                  },
                   {
                     "type": "context",
                     "elements": [
