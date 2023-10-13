@@ -1,9 +1,8 @@
-name: Check Pull Request Status
+name: Check Run ID
 
 on:
   issue_comment:
     types: [created]
-
 jobs:
   check_status:
     runs-on: ubuntu-latest
@@ -26,7 +25,6 @@ jobs:
         check_suites_data="${{ steps.check-suites.outputs.check-suites }}"
         success_status=$(echo "$check_suites_data" | jq -r '.check_suites[] | select(.conclusion == "success") | .conclusion')
         failure_status=$(echo "$check_suites_data" | jq -r '.check_suites[] | select(.conclusion == "failure") | .conclusion')
-        # ここで必要なステータスを確認
         if [[ -n $success_status ]]; then
           echo "Status Check: Success"
           # ステータスが成功の場合のアクション
@@ -37,5 +35,4 @@ jobs:
           echo "Status Check: None or other status"
           # ステータスが成功または失敗でない場合のアクション
         fi
-
-    # ここで必要なアクションを実行
+      shell: bash
