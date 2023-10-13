@@ -1,6 +1,6 @@
-name: Get Check Run ID and Trigger Action
+name: Get and Echo Check Run ID
 
-on: 
+on:
   issue_comment:
     types: [created]
 
@@ -9,14 +9,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Get Check Run ID
-      id: check_run_id
-      run: |
-        check_runs=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.issue.number }}/check-runs")
-        check_run_id=$(echo $check_runs | jq -r '.check_runs[0].id')
-        echo "::set-output name=check_run_id::${check_run_id}"
+    - name: Checkout Code
+      uses: actions/checkout@v2
 
-    - name: Use Check Run ID
+    - name: Get Check Run ID
+      id: get-staging-test-check-runs-id
+      uses: actions/github-script@v2
+      with:
+        script: |
+          const list = await github.checks.listForRef({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref: 'main', // ここで適切なブランチを指定
+            check_name: 'staging-test',
+            filter: 'latest'
+          });
+          return list.data.check_runs[0].id;
+      result-encoding: string
+
+    - name: Echo Check Run ID
       run: |
-        check_run_id="${{ steps.check_run_id.outputs.check_run_id }}"
+        check_run_id="${{ steps.get-staging-test-check-runs-id.outputs.result }}"
         echo "Check Run ID: $check_run_id"
