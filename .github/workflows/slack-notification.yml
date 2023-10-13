@@ -17,7 +17,7 @@ jobs:
     steps:
       # 「/review」とユーザーがコメントした場合
     - name: 'Start review'
-      if: github.event.issue.state == 'open' && github.event.issue.pull_request != null && github.event.comment.body == env.START_review_COMMENT
+      if: github.event.issue.state == 'open' && github.event.issue.pull_request != null && github.event.comment.body == env.START_review_COMMENT && github.event.pull_request.merged == true
       run: |
         curl -X POST \
           --data-urlencode 'payload={
