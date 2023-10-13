@@ -25,7 +25,6 @@ jobs:
             filter: 'latest'
           });
           return list.data.check_runs[0].id;
-      result-encoding: string
 
     - name: Echo Check Run ID
       run: |
