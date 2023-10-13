@@ -68,18 +68,9 @@ jobs:
       contents: read
       issues: write
     runs-on: ubuntu-latest
-    if: always()
+    if: always() && (needs.notification.result == 'cancelled' || needs.notification.result == 'failure')
     steps:
-    - name: Check if Workflow was Skipped or Failed
-      id: check_workflow
-      run: |
-        CONCLUSION=$(jq -r '.conclusion' <<< "${{ github.event.workflow_run }}")
-        SKIPPED=$(jq -r '.conclusion == "skipped" || .conclusion == "failure"' <<< "${{ github.event.workflow_run }}")
-        echo "SKIPPED=${SKIPPED}" >> $GITHUB_ENV
-      continue-on-error: true
-
     - name: Post Comment
-      if: env.SKIPPED == 'true'
       uses: actions/github-script@v3
       env:
         MESSAGE: |
