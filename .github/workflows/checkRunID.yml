@@ -1,9 +1,8 @@
 name: Get Check Run ID
 
-on:
-  pull_request:
-    types:
-      - synchronize
+on: 
+  issue_comment:
+    types: [created]
 
 jobs:
   get_check_run_id:
