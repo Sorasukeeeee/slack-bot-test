@@ -14,7 +14,7 @@ jobs:
       contents: read
     name: 'Notification'
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.mergeable == true
     steps:
       # 「/review」とユーザーがコメントした場合
     - name: 'Start review'
