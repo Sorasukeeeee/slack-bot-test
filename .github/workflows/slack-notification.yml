@@ -10,6 +10,8 @@ env:
 
 jobs:
   notification:
+    permissions:
+      contents: read
     name: 'Notification'
     runs-on: ubuntu-latest
     steps:
@@ -62,6 +64,9 @@ jobs:
         ${{ secrets.SLACK_WEBHOOK }}
       
   addCommentIfSkipped:
+    permissions:
+      contents: read
+      issues: write
     runs-on: ubuntu-latest
     if: always()
     steps:
