@@ -68,6 +68,7 @@ jobs:
       contents: read
       issues: write
     runs-on: ubuntu-latest
+    needs: notification
     if: always() && (needs.notification.result == 'cancelled' || needs.notification.result == 'failure')
     steps:
     - name: Post Comment
