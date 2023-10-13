@@ -14,10 +14,11 @@ jobs:
       contents: read
     name: 'Notification'
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
     steps:
       # 「/review」とユーザーがコメントした場合
     - name: 'Start review'
-      if: github.event.issue.state == 'open' && github.event.issue.pull_request != null && github.event.comment.body == env.START_review_COMMENT && github.event.pull_request.merged == true
+      if: github.event.issue.state == 'open' && github.event.issue.pull_request != null && github.event.comment.body == env.START_review_COMMENT
       run: |
         curl -X POST \
           --data-urlencode 'payload={
