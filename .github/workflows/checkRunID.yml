@@ -1,0 +1,20 @@
+name: Get Check Run ID
+
+on:
+  pull_request:
+    types:
+      - synchronize
+
+jobs:
+  get_check_run_id:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Get Check Run ID
+      id: check_run_id
+      run: echo "::set-output name=check_run_id::${{ github.run_id }}"
+
+    - name: Use Check Run ID
+      run: |
+        check_run_id="${{ steps.check_run_id.outputs.check_run_id }}"
+        echo "Check Run ID: $check_run_id"
