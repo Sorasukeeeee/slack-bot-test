@@ -1,0 +1,29 @@
+name: Check Pull Request Status
+
+on:
+  issue_comment:
+    types:
+      - created
+
+jobs:
+  check_pull_request:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check Pull Request Status
+      id: pr_status
+      run: |
+        # GitHub APIを使用してプルリクエストのステータスを取得
+        PR_NUMBER=$(jq -r .issue.number $GITHUB_EVENT_PATH)
+        STATUS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/commits" | \
+          jq '.[].commit.status.state')
+
+        if [ "$STATUS" = "\"success\"" ]; then
+          echo "Pull Request status is success."
+          # 成功した場合のアクションをここに追加
+        else
+          echo "Pull Request status is not success."
+          # ステータスが成功でない場合のアクションをここに追加
+        fi
