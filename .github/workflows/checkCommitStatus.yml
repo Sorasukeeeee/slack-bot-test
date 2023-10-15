@@ -9,24 +9,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: "Get branch name"
-      uses: xt0rted/pull-request-comment-branch@29fe0354c01b30fb3de76f193ab33abf8fe5ddb0 #1.2.0
-      id: comment-branch
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        
-    - name: Get Latest Commit SHA
-      id: commit_sha
-      run: |
-        BRANCH_NAME=${{ steps.comment-branch.outputs.branch_name }}
-        echo "COMMIT_SHA=$(git rev-parse BRANCH_NAME)" >> $GITHUB_ENV
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set Commit SHA
+      run: echo "COMMIT_SHA=$(git log -1 --format='%H')" >> $GITHUB_ENV
 
     - name: Get Check Suites
-      id: check_suites
       run: |
         CHECK_SUITES_RESPONSE=$(curl -s "https://api.github.com/repos/${{ github.repository }}/commits/${{ env.COMMIT_SHA }}/check-suites")
+        echo "Check Suites Response: $CHECK_SUITES_RESPONSE"
         CONCLUSIONS=($(echo $CHECK_SUITES_RESPONSE | jq -r '.check_suites[].conclusion'))
         echo "Conclusions: ${CONCLUSIONS[*]}"
         for CONCLUSION in "${CONCLUSIONS[@]}"; do
@@ -36,3 +28,6 @@ jobs:
           fi
         done
         echo "No failed check suites."
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub Tokenを使用してAPIにアクセス
+        COMMIT_SHA: ${{ env.COMMIT_SHA }}  # コミットSHAを使用
