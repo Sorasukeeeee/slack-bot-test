@@ -1,0 +1,38 @@
+name: Check Run ID
+
+on:
+  issue_comment:
+    types: [created]
+jobs:
+  check_status:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+
+    - name: Get Check Suites
+      id: check-suites
+      run: |
+        check_suites_data="$(curl -s -H 'Accept: application/vnd.github.v3+json' \
+        -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+        "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/check-suites")"
+        echo "::set-output name=check-suites::${check_suites_data}"
+
+    - name: Extract Check Suite Status
+      id: extract-status
+      run: |
+        check_suites_data="${{ steps.check-suites.outputs.check-suites }}"
+        success_status=$(echo "$check_suites_data" | jq -r '.check_suites[] | select(.conclusion == "success") | .conclusion')
+        failure_status=$(echo "$check_suites_data" | jq -r '.check_suites[] | select(.conclusion == "failure") | .conclusion')
+        if [[ -n $success_status ]]; then
+          echo "Status Check: Success"
+          # ステータスが成功の場合のアクション
+        elif [[ -n $failure_status ]]; then
+          echo "Status Check: Failure"
+          # ステータスが失敗の場合のアクション
+        else
+          echo "Status Check: None or other status"
+          # ステータスが成功または失敗でない場合のアクション
+        fi
+      shell: bash
