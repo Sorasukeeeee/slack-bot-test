@@ -9,28 +9,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
     - name: Get Latest Commit SHA
       id: commit_sha
       run: |
-        COMMIT_SHA=$(git rev-parse HEAD)
-        echo "::set-output name=commit_sha::$COMMIT_SHA"
+        echo "COMMIT_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Get Check Suites
       id: check_suites
       run: |
-        CHECK_SUITES_RESPONSE=$(curl -s "https://api.github.com/repos/${{ github.repository }}/commits/${{ steps.commit_sha.outputs.commit_sha }}/check-suites")
-        echo "::set-output name=check_suites::$CHECK_SUITES_RESPONSE"
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Check Conclusion
-      run: |
-        CONCLUSIONS=($(echo ${{ steps.check_suites.outputs.check_suites }} | jq -r '.check_suites[].conclusion'))
+        CHECK_SUITES_RESPONSE=$(curl -s "https://api.github.com/repos/${{ github.repository }}/commits/${{ env.COMMIT_SHA }}/check-suites")
+        CONCLUSIONS=($(echo $CHECK_SUITES_RESPONSE | jq -r '.check_suites[].conclusion'))
         echo "Conclusions: ${CONCLUSIONS[*]}"
         for CONCLUSION in "${CONCLUSIONS[@]}"; do
           if [ "$CONCLUSION" == "failure" ]; then
