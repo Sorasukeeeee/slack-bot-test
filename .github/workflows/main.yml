@@ -3,6 +3,7 @@ name: Check Latest Commit Status
 on:
   issue_comment:
     types: [created]
+
 jobs:
   check-commit-status:
     runs-on: ubuntu-latest
@@ -11,13 +12,25 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set Commit SHA
-      run: echo "COMMIT_SHA=$(git log -1 --format='%H')" >> $GITHUB_ENV
+    - name: Get Latest Commit SHA
+      id: commit_sha
+      run: |
+        COMMIT_SHA=$(git rev-parse HEAD)
+        echo "::set-output name=commit_sha::$COMMIT_SHA"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Get Check Suites
+      id: check_suites
       run: |
-        CHECK_SUITES_RESPONSE=$(curl -s "https://api.github.com/repos/${{ github.repository }}/commits/${{ env.COMMIT_SHA }}/check-suites")
-        CONCLUSIONS=($(echo $CHECK_SUITES_RESPONSE | jq -r '.check_suites[].conclusion'))
+        CHECK_SUITES_RESPONSE=$(curl -s "https://api.github.com/repos/${{ github.repository }}/commits/${{ steps.commit_sha.outputs.commit_sha }}/check-suites")
+        echo "::set-output name=check_suites::$CHECK_SUITES_RESPONSE"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Check Conclusion
+      run: |
+        CONCLUSIONS=($(echo ${{ steps.check_suites.outputs.check_suites }} | jq -r '.check_suites[].conclusion'))
         echo "Conclusions: ${CONCLUSIONS[*]}"
         for CONCLUSION in "${CONCLUSIONS[@]}"; do
           if [ "$CONCLUSION" == "failure" ]; then
@@ -26,6 +39,3 @@ jobs:
           fi
         done
         echo "No failed check suites."
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub Tokenを使用してAPIにアクセス
-        COMMIT_SHA: ${{ env.COMMIT_SHA }}  # コミットSHAを使用
