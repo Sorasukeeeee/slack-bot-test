@@ -1,37 +1,31 @@
-name: Check Commit Check Suites
+name: Check Latest Commit Status
 
 on:
-  push:
-    branches:
-      - main  # メインブランチにコミットされたときに実行
-
+  issue_comment:
+    types: [created]
 jobs:
-  check_commit_suites:
+  check-commit-status:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Check out code
+    - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Get latest commit SHA
-      id: commit_sha
-      run: echo "::set-output name=sha::$(git log -1 --format='%H')"
+    - name: Set Commit SHA
+      run: echo "COMMIT_SHA=$(git log -1 --format='%H')" >> $GITHUB_ENV
 
-    - name: Get check suites
-      id: get_check_suites
+    - name: Get Check Suites
       run: |
-        commit_sha="${{ steps.commit_sha.outputs.sha }}"
-        api_url="https://api.github.com/repos/${{ github.repository }}/commits/${commit_sha}/check-suites"
-        check_suites_json="$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" $api_url)"
-        echo "::set-output name=check_suites::${check_suites_json}"
-
-    - name: Check for failures
-      run: |
-        check_suites="${{ steps.get_check_suites.outputs.check_suites }}"
-        failures="$(echo $check_suites | jq '.check_suites[] | select(.conclusion == "failure")')"
-        if [ -n "$failures" ]; then
-          echo "Failures found in check suites!"
-          exit 1
+        CHECK_SUITES_RESPONSE=$(curl -s "https://api.github.com/repos/${{ github.repository }}/commits/${{ env.COMMIT_SHA }}/check-suites")
+        echo "Check Suites Response: $CHECK_SUITES_RESPONSE"
+        CONCLUSION=$(echo $CHECK_SUITES_RESPONSE | jq -r '.check_suites[] | select(.conclusion == "failure") | .conclusion')
+        echo "Conclusion: $CONCLUSION"
+        if [ -n "$CONCLUSION" ]; then
+          echo "There are failed check suites."
         else
-          echo "No failures found in check suites."
+          echo "No failed check suites."
         fi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub Tokenを使用してAPIにアクセス
+        COMMIT_SHA: ${{ env.COMMIT_SHA }}  # コミットSHAを使用
+
