@@ -17,15 +17,15 @@ jobs:
     - name: Get Check Suites
       run: |
         CHECK_SUITES_RESPONSE=$(curl -s "https://api.github.com/repos/${{ github.repository }}/commits/${{ env.COMMIT_SHA }}/check-suites")
-        echo "Check Suites Response: $CHECK_SUITES_RESPONSE"
-        CONCLUSION=$(echo $CHECK_SUITES_RESPONSE | jq -r '.check_suites[] | select(.conclusion == "failure") | .conclusion')
-        echo "Conclusion: $CONCLUSION"
-        if [ -n "$CONCLUSION" ]; then
-          echo "There are failed check suites."
-        else
-          echo "No failed check suites."
-        fi
+        CONCLUSIONS=($(echo $CHECK_SUITES_RESPONSE | jq -r '.check_suites[].conclusion'))
+        echo "Conclusions: ${CONCLUSIONS[*]}"
+        for CONCLUSION in "${CONCLUSIONS[@]}"; do
+          if [ "$CONCLUSION" == "failure" ]; then
+            echo "There is a failed check suite."
+            exit 1
+          fi
+        done
+        echo "No failed check suites."
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub Tokenを使用してAPIにアクセス
         COMMIT_SHA: ${{ env.COMMIT_SHA }}  # コミットSHAを使用
-
