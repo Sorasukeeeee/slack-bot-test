@@ -9,14 +9,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout PR Branch
-      run: git checkout ${{ github.head_ref }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: "Get branch name"
+      uses: xt0rted/pull-request-comment-branch@29fe0354c01b30fb3de76f193ab33abf8fe5ddb0 #1.2.0
+      id: comment-branch
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        
     - name: Get Latest Commit SHA
       id: commit_sha
       run: |
-        echo "COMMIT_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
+        BRANCH_NAME=${{ steps.comment-branch.outputs.branch_name }}
+        echo "COMMIT_SHA=$(git rev-parse BRANCH_NAME)" >> $GITHUB_ENV
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
