@@ -1,0 +1,152 @@
+name: 'Code review request'
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  # レビュー依頼を行う
+  notification:
+    name: 'Code review request to Slack'
+    runs-on: ubuntu-latest
+    if: |
+      github.event.issue.state == 'open' &&
+      github.event.issue.pull_request != null &&
+      github.event.comment.body == '/review'
+    steps:
+      # CIが通っているかチェックする
+      - name: 'Checkout'
+        uses: actions/checkout@v4.1.0
+
+      - name: 'Set Commit SHA'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH_NAME=$(gh pr view ${{ github.event.issue.number }} --json headRefName --jq '.headRefName')
+          git fetch origin $BRANCH_NAME
+          echo "COMMIT_SHA=$(git log -n 1 origin/$BRANCH_NAME --pretty=format:"%H")" >> $GITHUB_ENV
+
+      - name: 'Get check suites'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Pull Requestsを出しているブランチの最新のコミットのCIの結果を取得し、失敗しているものがあればレビュー依頼ジョブを失敗とする
+        run: |
+          CHECK_SUITES_RESPONSE=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/${{ github.repository }}/commits/${{ env.COMMIT_SHA }}/check-suites")
+          echo "Check Suites Response: $CHECK_SUITES_RESPONSE"
+          CONCLUSIONS=($(echo $CHECK_SUITES_RESPONSE | jq -r '.check_suites[].conclusion'))
+          echo "Conclusions: ${CONCLUSIONS[*]}"
+          for CONCLUSION in "${CONCLUSIONS[@]}"; do
+            if [ "$CONCLUSION" == "failure" ]; then
+              echo "There is a failed check suite."
+              exit 1
+            fi
+          done
+          echo "No failed check suites."
+
+      # CIが通っている場合レビュー依頼を行う
+      - name: 'Remove /review command'
+        run: echo "REVIEW_COMMENT"=$(echo "${{ github.event.comment.body }}" | sed 's/\/review//g') >> $GITHUB_ENV
+
+      # CIが通っている場合レビュー依頼を行う
+      - name: 'Request review to Slack'
+        run: |
+          curl -X POST \
+            --data-urlencode 'payload={
+              "text": "<@Slack ID>\n PRのレビュー依頼が届きました！ご確認をお願いします！:bow:",
+              "blocks": [],
+              "attachments": [
+                {
+                  "color": "#DDDDDD",
+                  "blocks": [
+                    {
+                      "type": "context",
+                      "elements": [
+                        {
+                          "type": "image",
+                          "image_url": "https://avatars.githubusercontent.com/${{ github.actor }}",
+                          "alt_text": "github_icon"
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "${{ github.actor }}"
+                        }
+                      ]
+                    },
+                    {
+                        "type": "section",
+                        "text": {
+                          "type": "mrkdwn",
+                          "text": "*タイトル*\n ${{ github.event.issue.title }}",
+                        }
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*URL*\n https://github.com/${{ github.repository }}/pull/${{ github.event.issue.number }}",
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "*ラベル*\n ${{ join(github.event.issue.labels.*.name, ', ') }}",
+                        }
+                      ]
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*コメント*\n ${{ join(env.REVIEW_COMMENT, ', ') }}"
+                        },
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }' \
+          ${{ secrets.SLACK_WEBHOOK_REVIEW_REQUEST }}
+
+      - name: 'Post comment'
+        uses: actions/github-script@v7.0.1
+        env:
+          PR_NUMBER: ${{ github.event.issue.number }}
+          MESSAGE: |
+            レビュー依頼を送信しました。
+            チャンネル: [#x_team_cloud_infra_review](https://askulit.slack.com/archives/C061ECWM3KM)
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: process.env.PR_NUMBER,
+              body: process.env.MESSAGE
+            })
+
+  # CIが通っていない場合、またはスキップされた場合
+  addCommentIfSkipped:
+    runs-on: ubuntu-latest
+    needs: notification
+    if: |
+      always() &&
+      github.event.issue.state == 'open' &&
+      github.event.issue.pull_request != null &&
+      github.event.comment.body == '/review' &&
+      (needs.notification.result == 'skipped' || needs.notification.result == 'failure')
+    steps:
+      - name: 'Post comment'
+        uses: actions/github-script@v7.0.1
+        env:
+          PR_NUMBER: ${{ github.event.issue.number }}
+          MESSAGE: |
+            レビュー依頼がスキップまたは失敗しました。
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: process.env.PR_NUMBER,
+              body: process.env.MESSAGE
+            })
